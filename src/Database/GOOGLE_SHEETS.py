@@ -12,10 +12,15 @@ creds = Credentials.from_service_account_file("Database_credentials.json", scope
 client = gspread.authorize(creds)
 
 sheets_id = "1B8A_dYd9HpO7tjKDtofsby_cXvGqouCrklhZ-iSiO8Q" #found this from the url of the sheet
-sheet = client.open_by_key(sheets_id).sheet1 #open the first sheet of the spreadsheet
 
-values = sheet.get_all_values() #get all the values from the sheet
+def get_transaction_data():
+    sheet = client.open_by_key(sheets_id).worksheet("TRANSACTION")
+    values = sheet.get_all_values()
+    df = pd.DataFrame(values[1:], columns=values[0])
+    return df
 
-Sheet = pd.DataFrame(values[1:], columns=values[0]) #create a DataFrame from the values, using the first row as column names
 
-Sheet.to_csv("Family_App_Data.csv", index=False) #save the DataFrame to a CSV file without the index
+
+if __name__ == "__main__":
+    df = get_transaction_data()
+    print(df)
