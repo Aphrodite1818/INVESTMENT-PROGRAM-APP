@@ -1,2 +1,3 @@
 contribution/
-env/
+env
+Database_credentials.json
