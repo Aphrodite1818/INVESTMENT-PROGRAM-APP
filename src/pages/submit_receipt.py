@@ -13,7 +13,7 @@ except ModuleNotFoundError:
 
 GREEN = "#1b8a3a"
 GREEN_LIGHT = "#a5d6a7"
-MIN_AMOUNT = 1000.0
+WEEKLY_CONTRIBUTION = 1000.0
 START_WEEK = 6
 TOTAL_MONTHS = 10
 WEEKS_PER_MONTH = 4
@@ -72,7 +72,16 @@ normalized_user = str(username).strip().title()
 persist_login(normalized_user, "user")
 st.markdown(f"<h3 style='color:{GREEN};'>User: {normalized_user}</h3>", unsafe_allow_html=True)
 
-existing_df = clean_transaction_data(get_transaction_data())
+records_available = True
+try:
+    existing_df = clean_transaction_data(get_transaction_data())
+except Exception:
+    records_available = False
+    existing_df = pd.DataFrame(columns=["NAME", "AMOUNT PAID", "DATE", "WEEK"])
+    st.error(
+        "We could not load contribution records right now. Please refresh and try again in a moment."
+    )
+
 if not existing_df.empty:
     existing_df["NAME"] = existing_df["NAME"].astype(str).str.strip().str.title()
     user_existing = existing_df[existing_df["NAME"] == normalized_user].copy()
@@ -87,13 +96,14 @@ else:
 today = date.today()
 open_week = current_open_week(today)
 due_week = next_due_week(paid_weeks)
-can_submit = due_week <= open_week and due_week <= END_WEEK
+can_submit = records_available and due_week <= open_week and due_week <= END_WEEK
+arrears_weeks = max(0, open_week - due_week)
 
 l, c, r = st.columns([1, 2, 1])
 with c:
     with st.container(border=True):
         st.markdown(
-            f"<div style='text-align:center; color:{GREEN_LIGHT};'>Pay in order. If you missed a week, pay that week first.</div>",
+            f"<div style='text-align:center; color:{GREEN_LIGHT};'>Pay in order. If you missed a week, complete each missed week first before paying the current week.</div>",
             unsafe_allow_html=True,
         )
 
@@ -102,25 +112,39 @@ with c:
             unsafe_allow_html=True,
         )
 
-        amount = st.number_input("Amount Paid (N)", min_value=MIN_AMOUNT, step=100.0, format="%.2f")
+        amount = st.number_input(
+            "Amount Paid (N)",
+            min_value=WEEKLY_CONTRIBUTION,
+            max_value=WEEKLY_CONTRIBUTION,
+            step=100.0,
+            format="%.2f",
+            help="Weekly contribution is fixed at N1,000.",
+        )
 
         if due_week > END_WEEK:
             st.success("You have completed all scheduled contributions.")
             submitted = False
         elif can_submit:
             st.info(f"Next required week: Week {due_week}")
+            if arrears_weeks > 0:
+                st.warning(
+                    f"You currently owe {arrears_weeks + 1} week(s) from Week {due_week} to Week {open_week}. "
+                    "Complete these week-by-week before paying any later week."
+                )
             submitted = st.button(f"Pay Week {due_week}", use_container_width=True)
-        else:
+        elif records_available:
             next_open = next_monday(today)
             st.warning(
                 f"You have already paid through Week {open_week}. "
                 f"Next payment (Week {due_week}) opens on {next_open.strftime('%d/%m/%Y')}"
             )
             submitted = False
+        else:
+            submitted = False
 
     if submitted:
-        if amount < MIN_AMOUNT:
-            st.error(f"Amount must not be less than N{MIN_AMOUNT:,.0f}.")
+        if amount != WEEKLY_CONTRIBUTION:
+            st.error(f"Weekly contribution must be exactly N{WEEKLY_CONTRIBUTION:,.0f}.")
             st.stop()
 
         date_str = datetime.now().strftime("%d/%m/%Y")
@@ -133,7 +157,10 @@ with c:
                 fresh_df["WEEK"] = fresh_df["WEEK"].astype(str).str.strip().str.lower()
                 is_duplicate = ((fresh_df["NAME"] == normalized_user) & (fresh_df["WEEK"] == week)).any()
                 if is_duplicate:
-                    st.error(f"You already paid for {week.title()}.")
+                    st.warning(
+                        f"Week {due_week} has already been submitted for your account. "
+                        "No action was taken."
+                    )
                     st.stop()
 
             append_transaction(
@@ -148,8 +175,11 @@ with c:
             )
             st.switch_page("pages/user_dashboard.py")
 
-        except Exception as e:
-            st.error(f"Submission failed: {e}")
+        except Exception:
+            st.error(
+                "We could not submit your payment right now. Please try again shortly. "
+                "If this keeps happening, contact admin."
+            )
 
 st.markdown("")
 b1, b2 = st.columns([2, 2])
