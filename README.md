@@ -5,6 +5,7 @@ A Streamlit-based contribution management app for a family investment program.
 The app uses Google Sheets as the backend datastore and supports:
 - Secure login/signup (hashed passwords)
 - Persistent login across refresh (until logout)
+- Back/refresh-safe session restoration on protected pages
 - User contribution submission
 - User analytics dashboard
 - Admin dashboard and review workflows
@@ -25,6 +26,7 @@ The app uses Google Sheets as the backend datastore and supports:
 - New users are automatically logged in after successful signup
 - Passwords are hashed with SHA-256 + salt before storage
 - `admin` username is routed to admin pages
+- User remains logged in on refresh/back until explicit logout
 
 ### User Dashboard (`src/pages/user_dashboard.py`)
 - Shows user KPIs and fund-wide analytics

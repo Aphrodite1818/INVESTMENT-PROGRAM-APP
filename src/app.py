@@ -1,8 +1,8 @@
 import streamlit as st
 try:
-    from src.Tools.session_auth import restore_login
+    from src.Tools.session_auth import persist_login, restore_login
 except ModuleNotFoundError:
-    from Tools.session_auth import restore_login
+    from Tools.session_auth import persist_login, restore_login
 
 st.set_page_config(
     page_title="Family Investment App",
@@ -37,6 +37,9 @@ role = str(st.session_state.get("role") or "").strip().lower()
 if role not in {"admin", "user"}:
     role = "admin" if username == "admin" else "user"
     st.session_state["role"] = role
+
+if st.session_state.get("username"):
+    persist_login(st.session_state.get("username"), role)
 
 if role == "admin":
     st.switch_page("pages/Admin_dashboard.py")

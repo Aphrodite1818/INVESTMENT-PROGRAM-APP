@@ -5,11 +5,11 @@ from datetime import date, datetime, timedelta
 try:
     from src.Database.GOOGLE_SHEETS import append_transaction, get_transaction_data
     from src.Tools.data_clean import clean_transaction_data
-    from src.Tools.session_auth import clear_login, restore_login
+    from src.Tools.session_auth import clear_login, persist_login, restore_login
 except ModuleNotFoundError:
     from Database.GOOGLE_SHEETS import append_transaction, get_transaction_data
     from Tools.data_clean import clean_transaction_data
-    from Tools.session_auth import clear_login, restore_login
+    from Tools.session_auth import clear_login, persist_login, restore_login
 
 GREEN = "#1b8a3a"
 GREEN_LIGHT = "#a5d6a7"
@@ -70,6 +70,7 @@ if not username:
     st.stop()
 
 normalized_user = str(username).strip().title()
+persist_login(normalized_user, "user")
 st.markdown(f"<h3 style='color:{GREEN};'>User: {normalized_user}</h3>", unsafe_allow_html=True)
 
 existing_df = clean_transaction_data(get_transaction_data())

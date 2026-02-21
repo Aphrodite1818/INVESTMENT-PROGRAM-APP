@@ -6,11 +6,11 @@ import plotly.graph_objects as go
 try:
     from src.Database.GOOGLE_SHEETS import get_transaction_data
     from src.Tools.data_clean import clean_transaction_data
-    from src.Tools.session_auth import clear_login, restore_login
+    from src.Tools.session_auth import clear_login, persist_login, restore_login
 except ModuleNotFoundError:
     from Database.GOOGLE_SHEETS import get_transaction_data
     from Tools.data_clean import clean_transaction_data
-    from Tools.session_auth import clear_login, restore_login
+    from Tools.session_auth import clear_login, persist_login, restore_login
 
 st.set_page_config(page_title="User Dashboard", layout="wide")
 
@@ -48,6 +48,7 @@ username = str(st.session_state.get("username") or "").strip().title()
 if not username:
     st.error("No user found in session. Please log in again.")
     st.stop()
+persist_login(username, "user")
 
 st.markdown(f"<h1 style='text-align: center; color: {GREEN};'>My Dashboard</h1>", unsafe_allow_html=True)
 st.markdown(f"<h3 style='text-align:left; color: {GREEN};'>WELCOME: {username}</h3>", unsafe_allow_html=True)

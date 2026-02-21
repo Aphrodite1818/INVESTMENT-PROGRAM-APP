@@ -32,6 +32,8 @@ def _set_query_params(params: dict) -> None:
 
 def persist_login(username: str, role: str) -> None:
     username = str(username or "").strip().title()
+    if not username:
+        return
     role = str(role or "user").strip().lower()
     st.session_state["authenticated"] = True
     st.session_state["username"] = username

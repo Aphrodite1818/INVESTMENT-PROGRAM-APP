@@ -13,6 +13,7 @@ GREEN = "#1b8a3a"
 
 restore_login()
 if st.session_state.get("authenticated"):
+    persist_login(st.session_state.get("username"), st.session_state.get("role", "user"))
     if st.session_state.get("role") == "admin":
         st.switch_page("pages/Admin_dashboard.py")
     st.switch_page("pages/user_dashboard.py")

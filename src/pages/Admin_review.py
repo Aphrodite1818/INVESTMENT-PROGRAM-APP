@@ -7,11 +7,11 @@ import streamlit as st
 try:
     from src.Database.GOOGLE_SHEETS import get_transaction_data
     from src.Tools.data_clean import clean_transaction_data
-    from src.Tools.session_auth import clear_login, restore_login
+    from src.Tools.session_auth import clear_login, persist_login, restore_login
 except ModuleNotFoundError:
     from Database.GOOGLE_SHEETS import get_transaction_data
     from Tools.data_clean import clean_transaction_data
-    from Tools.session_auth import clear_login, restore_login
+    from Tools.session_auth import clear_login, persist_login, restore_login
 
 st.set_page_config(page_title="Admin Review", layout="wide")
 
@@ -73,6 +73,8 @@ if not st.session_state.get("authenticated"):
 
 if st.session_state.get("role") != "admin":
     st.switch_page("pages/user_dashboard.py")
+
+persist_login(st.session_state.get("username"), "admin")
 
 st.markdown(f"<h1 style='text-align:center; color:{GREEN};'>Admin Review</h1>", unsafe_allow_html=True)
 
