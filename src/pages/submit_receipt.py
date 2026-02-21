@@ -58,16 +58,15 @@ restore_login()
 st.markdown(f"<h1 style='text-align:center; color:{GREEN};'>Submit Contribution</h1>", unsafe_allow_html=True)
 
 if not st.session_state.get("authenticated"):
-    st.error("Please log in first.")
-    st.stop()
+    st.switch_page("pages/login.py")
 
 if st.session_state.get("role") == "admin":
     st.switch_page("pages/Admin_dashboard.py")
 
 username = st.session_state.get("username")
 if not username:
-    st.error("No username found in session.")
-    st.stop()
+    clear_login()
+    st.switch_page("pages/login.py")
 
 normalized_user = str(username).strip().title()
 persist_login(normalized_user, "user")

@@ -38,16 +38,15 @@ hide_sidebar()
 restore_login()
 
 if not st.session_state.get("authenticated"):
-    st.error("Please log in to view this page.")
-    st.stop()
+    st.switch_page("pages/login.py")
 
 if st.session_state.get("role") == "admin":
     st.switch_page("pages/Admin_dashboard.py")
 
 username = str(st.session_state.get("username") or "").strip().title()
 if not username:
-    st.error("No user found in session. Please log in again.")
-    st.stop()
+    clear_login()
+    st.switch_page("pages/login.py")
 persist_login(username, "user")
 
 st.markdown(f"<h1 style='text-align: center; color: {GREEN};'>My Dashboard</h1>", unsafe_allow_html=True)

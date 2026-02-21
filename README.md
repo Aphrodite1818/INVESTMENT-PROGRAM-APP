@@ -144,6 +144,7 @@ streamlit run src/app.py
 - `NoSessionContext` error: run with `streamlit run src/app.py` (not `python src/app.py`)
 - Missing columns error: verify sheet headers match required names exactly
 - Permission errors: recheck service account sharing on the sheet
+- Protected-page auth guards redirect cleanly to login if session is missing
 
 ## Tech Stack
 

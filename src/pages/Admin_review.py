@@ -68,8 +68,7 @@ hide_sidebar()
 restore_login()
 
 if not st.session_state.get("authenticated"):
-    st.error("Please log in first.")
-    st.stop()
+    st.switch_page("pages/login.py")
 
 if st.session_state.get("role") != "admin":
     st.switch_page("pages/user_dashboard.py")
