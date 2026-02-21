@@ -6,9 +6,11 @@ import plotly.graph_objects as go
 try:
     from src.Database.GOOGLE_SHEETS import get_transaction_data
     from src.Tools.data_clean import clean_transaction_data
+    from src.Tools.session_auth import clear_login, restore_login
 except ModuleNotFoundError:
     from Database.GOOGLE_SHEETS import get_transaction_data
     from Tools.data_clean import clean_transaction_data
+    from Tools.session_auth import clear_login, restore_login
 
 st.set_page_config(page_title="User Dashboard", layout="wide")
 
@@ -33,6 +35,7 @@ def hide_sidebar() -> None:
 
 
 hide_sidebar()
+restore_login()
 
 if not st.session_state.get("authenticated"):
     st.error("Please log in to view this page.")
@@ -258,8 +261,6 @@ with a1:
 
 with a2:
     if st.button("Logout", use_container_width=True):
-        st.session_state["authenticated"] = False
-        st.session_state["username"] = None
-        st.session_state["role"] = "user"
+        clear_login()
         st.switch_page("pages/login.py")
 

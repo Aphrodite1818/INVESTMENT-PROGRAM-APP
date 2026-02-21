@@ -3,12 +3,12 @@ import pandas as pd
 
 def clean_transaction_data(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
-        return pd.DataFrame(columns=["NAME", "AMOUNT PAID", "DATE", "WEEK", "RECEIPT LINK"])
+        return pd.DataFrame(columns=["NAME", "AMOUNT PAID", "DATE", "WEEK"])
 
     df = df.copy()
     df.columns = df.columns.str.strip().str.upper()
 
-    for col in ["NAME", "AMOUNT PAID", "DATE", "WEEK", "RECEIPT LINK"]:
+    for col in ["NAME", "AMOUNT PAID", "DATE", "WEEK"]:
         if col not in df.columns:
             df[col] = ""
 

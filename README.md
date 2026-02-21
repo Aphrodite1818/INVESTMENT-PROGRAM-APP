@@ -4,6 +4,7 @@ A Streamlit-based contribution management app for a family investment program.
 
 The app uses Google Sheets as the backend datastore and supports:
 - Secure login/signup (hashed passwords)
+- Persistent login across refresh (until logout)
 - User contribution submission
 - User analytics dashboard
 - Admin dashboard and review workflows
@@ -21,6 +22,7 @@ The app uses Google Sheets as the backend datastore and supports:
 
 ### Login (`src/pages/login.py`)
 - Users can log in or sign up
+- New users are automatically logged in after successful signup
 - Passwords are hashed with SHA-256 + salt before storage
 - `admin` username is routed to admin pages
 
@@ -32,10 +34,10 @@ The app uses Google Sheets as the backend datastore and supports:
 ### Submit Contribution (`src/pages/submit_receipt.py`)
 - Accepts only:
   - contribution amount
-  - contribution week
 - Validates:
   - amount >= `N1000`
-  - week is within 6-40
+  - weekly order enforcement (missed weeks are paid first)
+  - one contribution per open week
   - no duplicate submission for same user/week
 - Saves to Google Sheets and redirects back to dashboard automatically
 

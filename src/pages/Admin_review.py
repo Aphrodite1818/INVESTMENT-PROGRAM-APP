@@ -7,9 +7,11 @@ import streamlit as st
 try:
     from src.Database.GOOGLE_SHEETS import get_transaction_data
     from src.Tools.data_clean import clean_transaction_data
+    from src.Tools.session_auth import clear_login, restore_login
 except ModuleNotFoundError:
     from Database.GOOGLE_SHEETS import get_transaction_data
     from Tools.data_clean import clean_transaction_data
+    from Tools.session_auth import clear_login, restore_login
 
 st.set_page_config(page_title="Admin Review", layout="wide")
 
@@ -63,6 +65,7 @@ def load_data() -> pd.DataFrame:
 
 
 hide_sidebar()
+restore_login()
 
 if not st.session_state.get("authenticated"):
     st.error("Please log in first.")
@@ -236,7 +239,5 @@ with a2:
 
 with a3:
     if st.button("Logout", use_container_width=True):
-        st.session_state["authenticated"] = False
-        st.session_state["username"] = None
-        st.session_state["role"] = "user"
+        clear_login()
         st.switch_page("pages/login.py")

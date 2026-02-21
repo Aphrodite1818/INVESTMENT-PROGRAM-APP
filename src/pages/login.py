@@ -2,12 +2,20 @@ import streamlit as st
 try:
     from src.Tools.Auth import verify_creds, store_creds
     from src.Tools.background import set_background
+    from src.Tools.session_auth import persist_login, restore_login
 except ModuleNotFoundError:
     from Tools.Auth import verify_creds, store_creds
     from Tools.background import set_background
+    from Tools.session_auth import persist_login, restore_login
 from pathlib import Path
 
 GREEN = "#1b8a3a"
+
+restore_login()
+if st.session_state.get("authenticated"):
+    if st.session_state.get("role") == "admin":
+        st.switch_page("pages/Admin_dashboard.py")
+    st.switch_page("pages/user_dashboard.py")
 
 set_background(Path(__file__).resolve().parents[2] / "images" / "login_page_image.png")
 
@@ -45,14 +53,12 @@ with center:
             if submitted:
                 success, message = verify_creds(username, password)
                 if success:
-                    st.session_state["authenticated"] = True
-                    st.session_state["username"] = str(username).strip().title()
-
-                    if str(username).strip().lower() == "admin":
-                        st.session_state["role"] = "admin"
+                    clean_user = str(username).strip().title()
+                    if clean_user.lower() == "admin":
+                        persist_login(clean_user, "admin")
                         st.switch_page("pages/Admin_dashboard.py")
                     else:
-                        st.session_state["role"] = "user"
+                        persist_login(clean_user, "user")
                         st.switch_page("pages/user_dashboard.py")
                 else:
                     st.error(message)
@@ -67,7 +73,12 @@ with center:
             if submitted:
                 success, message = store_creds(new_username, new_password)
                 if success:
-                    st.success(message)
-                    st.info("Now switch to Login and sign in.")
+                    clean_user = str(new_username).strip().title()
+                    if clean_user.lower() == "admin":
+                        persist_login(clean_user, "admin")
+                        st.switch_page("pages/Admin_dashboard.py")
+                    else:
+                        persist_login(clean_user, "user")
+                        st.switch_page("pages/user_dashboard.py")
                 else:
                     st.error(message)

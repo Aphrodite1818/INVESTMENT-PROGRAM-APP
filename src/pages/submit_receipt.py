@@ -5,9 +5,11 @@ from datetime import date, datetime, timedelta
 try:
     from src.Database.GOOGLE_SHEETS import append_transaction, get_transaction_data
     from src.Tools.data_clean import clean_transaction_data
+    from src.Tools.session_auth import clear_login, restore_login
 except ModuleNotFoundError:
     from Database.GOOGLE_SHEETS import append_transaction, get_transaction_data
     from Tools.data_clean import clean_transaction_data
+    from Tools.session_auth import clear_login, restore_login
 
 GREEN = "#1b8a3a"
 GREEN_LIGHT = "#a5d6a7"
@@ -52,6 +54,7 @@ def next_due_week(paid_weeks: set[int]) -> int:
 
 
 hide_sidebar()
+restore_login()
 st.markdown(f"<h1 style='text-align:center; color:{GREEN};'>Submit Contribution</h1>", unsafe_allow_html=True)
 
 if not st.session_state.get("authenticated"):
@@ -157,7 +160,5 @@ with b1:
 
 with b2:
     if st.button("Logout", use_container_width=True):
-        st.session_state["authenticated"] = False
-        st.session_state["username"] = None
-        st.session_state["role"] = "user"
+        clear_login()
         st.switch_page("pages/login.py")

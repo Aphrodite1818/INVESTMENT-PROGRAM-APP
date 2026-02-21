@@ -141,7 +141,6 @@ def append_transaction(
     set_col("AMOUNT PAID", float(amount_paid))
     set_col("DATE", date_str)
     set_col("WEEK", str(week).strip().lower())
-    set_col("RECEIPT LINK", "")
 
     ws.append_row(row, value_input_option="USER_ENTERED")
     clear_transaction_cache()

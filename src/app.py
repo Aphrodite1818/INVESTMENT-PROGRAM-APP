@@ -1,4 +1,8 @@
 import streamlit as st
+try:
+    from src.Tools.session_auth import restore_login
+except ModuleNotFoundError:
+    from Tools.session_auth import restore_login
 
 st.set_page_config(
     page_title="Family Investment App",
@@ -17,6 +21,8 @@ if "username" not in st.session_state:
 
 if "role" not in st.session_state:
     st.session_state["role"] = "user"   # "admin" or "user"
+
+restore_login()
 
 # -----------------------------
 # Routing (login-first)
