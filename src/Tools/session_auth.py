@@ -4,6 +4,9 @@ import os
 import streamlit as st
 
 _SECRET = os.getenv("SESSION_SECRET", "family-investment-session-secret")
+_QP_USER = "u"
+_QP_ROLE = "r"
+_QP_SIG = "s"
 
 
 def _sign(username: str, role: str) -> str:
@@ -23,11 +26,27 @@ def _get_query_params() -> dict:
 def _set_query_params(params: dict) -> None:
     try:
         qp = st.query_params
-        qp.clear()
         for k, v in params.items():
             qp[k] = str(v)
     except Exception:
-        st.experimental_set_query_params(**params)
+        current = st.experimental_get_query_params()
+        merged = {k: (v[0] if isinstance(v, list) and v else str(v)) for k, v in current.items()}
+        merged.update({k: str(v) for k, v in params.items()})
+        st.experimental_set_query_params(**merged)
+
+
+def _remove_query_params(keys: list[str]) -> None:
+    try:
+        qp = st.query_params
+        for key in keys:
+            if key in qp:
+                del qp[key]
+    except Exception:
+        current = st.experimental_get_query_params()
+        merged = {k: (v[0] if isinstance(v, list) and v else str(v)) for k, v in current.items()}
+        for key in keys:
+            merged.pop(key, None)
+        st.experimental_set_query_params(**merged)
 
 
 def persist_login(username: str, role: str) -> None:
@@ -39,7 +58,15 @@ def persist_login(username: str, role: str) -> None:
     st.session_state["authenticated"] = True
     st.session_state["username"] = username
     st.session_state["role"] = role
-    _set_query_params({"u": username, "r": role, "s": _sign(username, role)})
+    signature = _sign(username, role)
+    params = _get_query_params()
+    if (
+        params.get(_QP_USER) == username
+        and params.get(_QP_ROLE) == role
+        and params.get(_QP_SIG) == signature
+    ):
+        return
+    _set_query_params({_QP_USER: username, _QP_ROLE: role, _QP_SIG: signature})
 
 
 def restore_login() -> None:
@@ -50,9 +77,9 @@ def restore_login() -> None:
         return
 
     params = _get_query_params()
-    username = str(params.get("u", "")).strip().title()
-    role = str(params.get("r", "user")).strip().lower()
-    sig = str(params.get("s", "")).strip()
+    username = str(params.get(_QP_USER, "")).strip().title()
+    role = str(params.get(_QP_ROLE, "user")).strip().lower()
+    sig = str(params.get(_QP_SIG, "")).strip()
     if not username or not sig:
         return
 
@@ -67,4 +94,4 @@ def clear_login() -> None:
     st.session_state["authenticated"] = False
     st.session_state["username"] = None
     st.session_state["role"] = "user"
-    _set_query_params({})
+    _remove_query_params([_QP_USER, _QP_ROLE, _QP_SIG])
