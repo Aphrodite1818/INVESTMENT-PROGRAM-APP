@@ -4,13 +4,13 @@ from src.Tools.background import set_background
 from pathlib import Path
 
 
-set_background(Path(__file__).parent.resolve() / "images" / "login_page_image.png")
+set_background(Path(__file__).resolve().parents[2] / "images" / "login_page_image.png")
 
-st.title("Family Investment App")
+st.markdown("<h1 style='text-align: center; color: green;'>Family Investment App</h1>", unsafe_allow_html=True)
 option = st.radio("Choose an option", ["Login", "Sign Up"], horizontal=True)
 
 if option == "Login":
-    st.subheader("Login")
+    st.markdown("<h1 style='color: green;text-align: center;'>Login</h1>", unsafe_allow_html=True)
 
     with st.form("login_form"):
         username = st.text_input("Username", key="login_user")
@@ -23,11 +23,16 @@ if option == "Login":
             st.session_state["authenticated"] = True
             st.session_state["username"] = username
             st.success(message)
+            if username == "admin":
+                st.session_state["is_admin"] = True
+                st.switch_page("pages/admin_dashboard.py")
+            else:
+                st.switch_page("pages/user_dashboard.py")
         else:
             st.error(message)
 
 elif option == "Sign Up":
-    st.subheader("Sign Up")
+    st.markdown("<h1 style='color: green;text-align: center;'>Sign Up</h1>", unsafe_allow_html=True)
 
     with st.form("signup_form"):
         new_username = st.text_input("New Username", key="signup_user")
