@@ -35,6 +35,7 @@ def persist_login(username: str, role: str) -> None:
     if not username:
         return
     role = str(role or "user").strip().lower()
+    st.session_state["logged_out"] = False
     st.session_state["authenticated"] = True
     st.session_state["username"] = username
     st.session_state["role"] = role
@@ -42,6 +43,9 @@ def persist_login(username: str, role: str) -> None:
 
 
 def restore_login() -> None:
+    if st.session_state.get("logged_out"):
+        return
+
     if st.session_state.get("authenticated"):
         return
 
@@ -59,6 +63,7 @@ def restore_login() -> None:
 
 
 def clear_login() -> None:
+    st.session_state["logged_out"] = True
     st.session_state["authenticated"] = False
     st.session_state["username"] = None
     st.session_state["role"] = "user"
