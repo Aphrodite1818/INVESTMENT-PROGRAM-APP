@@ -4,5 +4,3 @@ toolbarMode = "minimal"
 
 [ui]
 hideTopBar = true
-
-[client]
