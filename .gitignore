@@ -2,3 +2,5 @@ Venv/
 contribution/
 env
 Database_credentials.json
+__pycache__/
+*.pyc
