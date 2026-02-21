@@ -4,8 +4,12 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from src.Database.GOOGLE_SHEETS import get_transaction_data
-from src.Tools.data_clean import clean_transaction_data
+try:
+    from src.Database.GOOGLE_SHEETS import get_transaction_data
+    from src.Tools.data_clean import clean_transaction_data
+except ModuleNotFoundError:
+    from Database.GOOGLE_SHEETS import get_transaction_data
+    from Tools.data_clean import clean_transaction_data
 
 st.set_page_config(page_title="Admin Dashboard", layout="wide")
 
@@ -126,7 +130,10 @@ else:
         month_options.extend(sorted(dated["YEAR-MONTH"].unique().tolist()))
     selected_month = f2.selectbox("Filter by Month", month_options, index=0)
 
-    week_options = ["All"] + [f"Week {w}" for w in range(START_WEEK, END_WEEK + 1)]
+    week_values = sorted(
+        set(main_df["WEEK NUMBER"].dropna().astype(int).tolist()) | set(range(START_WEEK, END_WEEK + 1))
+    )
+    week_options = ["All"] + [f"Week {w}" for w in week_values]
     selected_week = f3.selectbox("Filter by Week", week_options, index=0)
 
     filtered = main_df.copy()

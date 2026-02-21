@@ -1,5 +1,8 @@
 import hashlib
-from src.Database.GOOGLE_SHEETS_AUTH import clear_auth_cache, get_auth_records, get_authentication_data
+try:
+    from src.Database.GOOGLE_SHEETS_AUTH import clear_auth_cache, get_auth_records, get_authentication_data
+except ModuleNotFoundError:
+    from Database.GOOGLE_SHEETS_AUTH import clear_auth_cache, get_auth_records, get_authentication_data
 
 SALT = "super_random_secret_string"
 

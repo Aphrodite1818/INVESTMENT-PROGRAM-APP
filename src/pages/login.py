@@ -1,6 +1,10 @@
 import streamlit as st
-from src.Tools.Auth import verify_creds, store_creds
-from src.Tools.background import set_background
+try:
+    from src.Tools.Auth import verify_creds, store_creds
+    from src.Tools.background import set_background
+except ModuleNotFoundError:
+    from Tools.Auth import verify_creds, store_creds
+    from Tools.background import set_background
 from pathlib import Path
 
 GREEN = "#1b8a3a"

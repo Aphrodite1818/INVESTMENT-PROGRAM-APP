@@ -3,8 +3,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-from src.Database.GOOGLE_SHEETS import get_transaction_data
-from src.Tools.data_clean import clean_transaction_data
+try:
+    from src.Database.GOOGLE_SHEETS import get_transaction_data
+    from src.Tools.data_clean import clean_transaction_data
+except ModuleNotFoundError:
+    from Database.GOOGLE_SHEETS import get_transaction_data
+    from Tools.data_clean import clean_transaction_data
 
 st.set_page_config(page_title="User Dashboard", layout="wide")
 
