@@ -8,11 +8,19 @@ import pandas as pd
 import streamlit as st
 from google.oauth2.service_account import Credentials
 
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:  # pragma: no cover
+    load_dotenv = None
+
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 CREDENTIALS_PATH = Path(__file__).resolve().parents[2] / "Database_credentials.json"
 
 SHEETS_ID = "1B8A_dYd9HpO7tjKDtofsby_cXvGqouCrklhZ-iSiO8Q"
 WORKSHEET_NAME = "TRANSACTION"
+
+if load_dotenv is not None:
+    load_dotenv()
 
 
 @st.cache_resource(show_spinner=False)
@@ -22,10 +30,20 @@ def _get_client():
 
 
 def _load_credentials() -> Credentials:
-    required = {"type", "project_id", "private_key", "client_email", "token_uri"}
+    attempted_sources = []
 
-    def has_required_fields(data: dict) -> bool:
-        return required.issubset(set(data.keys()))
+    def normalize_info(data: dict) -> dict:
+        info = dict(data)
+        if "private_key" in info and isinstance(info["private_key"], str):
+            info["private_key"] = info["private_key"].replace("\\n", "\n")
+        return info
+
+    def try_info(data: dict, source_name: str):
+        attempted_sources.append(source_name)
+        try:
+            return Credentials.from_service_account_info(normalize_info(data), scopes=SCOPES)
+        except Exception:
+            return None
 
     candidate_sections = [
         "gcp_service_account",
@@ -36,34 +54,44 @@ def _load_credentials() -> Credentials:
     ]
     for key in candidate_sections:
         if key in st.secrets:
-            section = dict(st.secrets[key])
-            if has_required_fields(section):
-                return Credentials.from_service_account_info(section, scopes=SCOPES)
+            creds = try_info(dict(st.secrets[key]), f"st.secrets[{key}]")
+            if creds is not None:
+                return creds
 
-    root_secrets = dict(st.secrets)
-    if has_required_fields(root_secrets):
-        return Credentials.from_service_account_info(root_secrets, scopes=SCOPES)
+    creds = try_info(dict(st.secrets), "st.secrets(root)")
+    if creds is not None:
+        return creds
 
     if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-        gsheets = dict(st.secrets["connections"]["gsheets"])
-        if has_required_fields(gsheets):
-            return Credentials.from_service_account_info(gsheets, scopes=SCOPES)
+        creds = try_info(dict(st.secrets["connections"]["gsheets"]), "st.secrets[connections][gsheets]")
+        if creds is not None:
+            return creds
 
     env_json = os.getenv("GOOGLE_CREDENTIALS_JSON", "").strip()
     if env_json:
-        return Credentials.from_service_account_info(json.loads(env_json), scopes=SCOPES)
+        creds = try_info(json.loads(env_json), "GOOGLE_CREDENTIALS_JSON")
+        if creds is not None:
+            return creds
 
     env_json_alt = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
     if env_json_alt:
-        return Credentials.from_service_account_info(json.loads(env_json_alt), scopes=SCOPES)
+        creds = try_info(json.loads(env_json_alt), "GOOGLE_SERVICE_ACCOUNT_JSON")
+        if creds is not None:
+            return creds
+
+    env_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+    if env_path and Path(env_path).exists():
+        attempted_sources.append("GOOGLE_APPLICATION_CREDENTIALS(path)")
+        return Credentials.from_service_account_file(env_path, scopes=SCOPES)
 
     if CREDENTIALS_PATH.exists():
+        attempted_sources.append("Database_credentials.json")
         return Credentials.from_service_account_file(str(CREDENTIALS_PATH), scopes=SCOPES)
 
     raise FileNotFoundError(
-        "Google credentials not found. Add service account fields to Streamlit secrets "
-        "(section keys supported: gcp_service_account/google_service_account/service_account) "
-        "or provide GOOGLE_CREDENTIALS_JSON env var or Database_credentials.json locally."
+        "Google credentials not found or invalid. Checked: "
+        + ", ".join(attempted_sources)
+        + ". Configure Streamlit secrets or environment credentials."
     )
 
 
