@@ -14,8 +14,6 @@ except ModuleNotFoundError:
 st.set_page_config(page_title="Admin Dashboard", layout="wide")
 
 GREEN = "#1b8a3a"
-GREEN_LIGHT = "#a5d6a7"
-GREEN_FAINT = "#e8f5e9"
 CURRENCY_PREFIX = "N"
 START_WEEK = 6
 TOTAL_MONTHS = 10
@@ -29,6 +27,23 @@ def hide_sidebar() -> None:
         <style>
         [data-testid="stSidebar"] {display:none;}
         [data-testid="collapsedControl"] {display:none;}
+        [data-testid="stMetric"] {
+            border: 1px solid #d9e6da;
+            border-radius: 10px;
+            padding: 12px 10px;
+            min-height: 120px;
+            background: #ffffff;
+        }
+        [data-testid="stMetricLabel"] > div {
+            justify-content: center;
+            text-align: center;
+            color: #1b8a3a;
+            font-weight: 600;
+        }
+        [data-testid="stMetricValue"] > div {
+            justify-content: center;
+            color: #1b8a3a;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -42,6 +57,10 @@ def extract_week_number(value: str) -> float:
 
 def to_csv_bytes(df: pd.DataFrame) -> bytes:
     return df.to_csv(index=False).encode("utf-8")
+
+
+def format_money(value: float) -> str:
+    return f"{CURRENCY_PREFIX}{value:,.2f}"
 
 
 def load_data() -> pd.DataFrame:
@@ -86,37 +105,27 @@ else:
     unique_members = int(main_df["NAME"].nunique())
     recent_30 = float(main_df[main_df["DATE"] >= cutoff]["AMOUNT PAID"].sum()) if pd.notna(latest_date) else 0.0
 
-    in_scope = main_df[(main_df["WEEK NUMBER"] >= START_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)].copy()
+    in_scope = main_df[(main_df["WEEK NUMBER"] >= START_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)]
     expected_member_weeks = unique_members * (END_WEEK - START_WEEK + 1)
     submitted_member_weeks = int(in_scope.dropna(subset=["WEEK NUMBER"]).drop_duplicates(subset=["NAME", "WEEK NUMBER"]).shape[0])
     coverage_pct = (submitted_member_weeks / expected_member_weeks * 100) if expected_member_weeks > 0 else 0.0
 
-    k1, k2, k3, k4, k5 = st.columns(5)
+    k1, k2, k3, k4, k5 = st.columns([1, 1, 1, 1, 1], gap="small")
 
     with k1:
-        with st.container(border=True):
-            st.markdown("<h5 style='text-align:center;'>TOTAL FUND</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center;color:{GREEN};'>{CURRENCY_PREFIX}{total_fund:,.2f}</h3>", unsafe_allow_html=True)
+        st.metric("TOTAL FUND", format_money(total_fund))
 
     with k2:
-        with st.container(border=True):
-            st.markdown("<h5 style='text-align:center;'>TRANSACTIONS</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center;color:{GREEN};'>{total_txns}</h3>", unsafe_allow_html=True)
+        st.metric("TRANSACTIONS", f"{total_txns}")
 
     with k3:
-        with st.container(border=True):
-            st.markdown("<h5 style='text-align:center;'>ACTIVE MEMBERS</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center;color:{GREEN};'>{unique_members}</h3>", unsafe_allow_html=True)
+        st.metric("ACTIVE MEMBERS", f"{unique_members}")
 
     with k4:
-        with st.container(border=True):
-            st.markdown("<h5 style='text-align:center;'>LAST 30 DAYS</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center;color:{GREEN};'>{CURRENCY_PREFIX}{recent_30:,.2f}</h3>", unsafe_allow_html=True)
+        st.metric("LAST 30 DAYS", format_money(recent_30))
 
     with k5:
-        with st.container(border=True):
-            st.markdown("<h5 style='text-align:center;'>WEEK COVERAGE</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center;color:{GREEN};'>{coverage_pct:.1f}%</h3>", unsafe_allow_html=True)
+        st.metric("WEEK COVERAGE", f"{coverage_pct:.1f}%")
 
     st.markdown("")
 
@@ -125,7 +134,7 @@ else:
     selected_member = f1.selectbox("Filter by Member", member_options, index=0)
 
     month_options = ["All"]
-    dated = main_df.dropna(subset=["DATE"]).copy()
+    dated = main_df.dropna(subset=["DATE"])
     if not dated.empty:
         month_options.extend(sorted(dated["YEAR-MONTH"].unique().tolist()))
     selected_month = f2.selectbox("Filter by Month", month_options, index=0)
@@ -136,7 +145,7 @@ else:
     week_options = ["All"] + [f"Week {w}" for w in week_values]
     selected_week = f3.selectbox("Filter by Week", week_options, index=0)
 
-    filtered = main_df.copy()
+    filtered = main_df
     if selected_member != "All":
         filtered = filtered[filtered["NAME"] == selected_member]
     if selected_month != "All":
