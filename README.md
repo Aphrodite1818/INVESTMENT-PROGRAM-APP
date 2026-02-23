@@ -14,8 +14,8 @@ The app uses Google Sheets as the backend datastore and supports:
 ## Current Contribution Rules
 
 - Program duration: 10 months
-- Current active week starts at week 6
-- Allowed contribution week range: week 6 to week 40
+- Current active week starts at week 7
+- Allowed contribution week range: week 7 to week 40
 - Minimum contribution amount: `N1000`
 - One submission per user per week (duplicate week submissions are blocked)
 
@@ -50,7 +50,7 @@ The app uses Google Sheets as the backend datastore and supports:
 - CSV export for recent submissions
 
 ### Admin Review (`src/pages/Admin_review.py`)
-- Reviews submission coverage for weeks 6-40
+- Reviews submission coverage for weeks 7-40
 - Identifies missing weeks by member
 - Member-level drilldown with missing week list
 - CSV exports for:
@@ -82,7 +82,7 @@ Your Google Sheet should include at least:
 - `NAME`
 - `AMOUNT PAID`
 - `DATE` (format `dd/mm/YYYY`)
-- `WEEK` (example: `week 6`)
+- `WEEK` (example: `week 7`)
 
 Authentication worksheet should include:
 - `USERNAME`

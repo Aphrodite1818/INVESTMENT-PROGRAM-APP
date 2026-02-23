@@ -20,7 +20,7 @@ GREEN_LIGHT = "#a5d6a7"
 GREEN_FAINT = "#e8f5e9"
 RED = "#c62828"
 CURRENCY_PREFIX = "N"
-START_WEEK = 6
+START_WEEK = 7
 TOTAL_MONTHS = 10
 WEEKS_PER_MONTH = 4
 END_WEEK = TOTAL_MONTHS * WEEKS_PER_MONTH
@@ -131,7 +131,7 @@ else:
     with c1:
         with st.container(border=True):
             if valid_week_df.empty:
-                st.info("No valid in-range week data yet (weeks 6-40).")
+                st.info("No valid in-range week data yet (weeks 7-40).")
             else:
                 member_progress = (
                     valid_week_df.drop_duplicates(subset=["NAME", "WEEK NUMBER"])
