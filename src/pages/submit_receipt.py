@@ -14,11 +14,11 @@ except ModuleNotFoundError:
 GREEN = "#1b8a3a"
 GREEN_LIGHT = "#a5d6a7"
 WEEKLY_CONTRIBUTION = 1000.0
-START_WEEK = 6
+START_WEEK = 7
 TOTAL_MONTHS = 10
 WEEKS_PER_MONTH = 4
 END_WEEK = TOTAL_MONTHS * WEEKS_PER_MONTH
-WEEK6_START_DATE = date(2026, 2, 9)  # Monday
+WEEK7_START_DATE = date(2026, 2, 23)  # Monday
 
 
 def hide_sidebar() -> None:
@@ -34,9 +34,9 @@ def hide_sidebar() -> None:
 
 
 def current_open_week(today: date) -> int:
-    if today <= WEEK6_START_DATE:
+    if today <= WEEK7_START_DATE:
         return START_WEEK
-    weeks_elapsed = (today - WEEK6_START_DATE).days // 7
+    weeks_elapsed = (today - WEEK7_START_DATE).days // 7
     return min(START_WEEK + weeks_elapsed, END_WEEK)
 
 
