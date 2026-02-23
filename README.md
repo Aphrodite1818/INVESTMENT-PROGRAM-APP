@@ -13,9 +13,9 @@ The app uses Google Sheets as the backend datastore and supports:
 
 ## Current Contribution Rules
 
-- Program duration: 10 months
+- Program duration: 52 weeks
 - Current active week starts at week 7
-- Allowed contribution week range: week 7 to week 40
+- Allowed contribution week range: week 7 to week 52
 - Minimum contribution amount: `N1000`
 - One submission per user per week (duplicate week submissions are blocked)
 
@@ -50,7 +50,7 @@ The app uses Google Sheets as the backend datastore and supports:
 - CSV export for recent submissions
 
 ### Admin Review (`src/pages/Admin_review.py`)
-- Reviews submission coverage for weeks 7-40
+- Reviews submission coverage for weeks 7-52
 - Identifies missing weeks by member
 - Member-level drilldown with missing week list
 - CSV exports for:
