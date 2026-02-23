@@ -82,6 +82,7 @@ if main_df.empty:
     st.info("No contribution data available yet.")
 else:
     expected_weeks = list(range(START_WEEK, END_WEEK + 1))
+    expected_week_set = set(expected_weeks)
 
     valid_week_df = main_df[(main_df["WEEK NUMBER"] >= START_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)].copy()
 
@@ -90,8 +91,9 @@ else:
         unique_members = sorted(main_df["NAME"].dropna().unique().tolist())
 
     member_expected = len(expected_weeks)
-    submitted_weeks = int(valid_week_df["WEEK NUMBER"].dropna().astype(int).nunique())
-    missing_total = max(member_expected - submitted_weeks, 0)
+    submitted_week_set = set(valid_week_df["WEEK NUMBER"].dropna().astype(int).tolist()) & expected_week_set
+    submitted_weeks = len(submitted_week_set)
+    missing_total = len(expected_week_set - submitted_week_set)
     completion_pct = (submitted_weeks / member_expected * 100) if member_expected > 0 else 0.0
 
     k1, k2, k3, k4 = st.columns(4)
