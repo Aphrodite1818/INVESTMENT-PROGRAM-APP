@@ -18,6 +18,7 @@ st.set_page_config(page_title="Admin Dashboard", layout="wide")
 GREEN = "#1b8a3a"
 CURRENCY_PREFIX = "N"
 START_WEEK = 7
+LEGACY_WEEK = 6
 TOTAL_WEEKS = 52
 END_WEEK = TOTAL_WEEKS
 
@@ -108,8 +109,8 @@ else:
     unique_members = int(main_df["NAME"].nunique())
     recent_30 = float(main_df[main_df["DATE"] >= cutoff]["AMOUNT PAID"].sum()) if pd.notna(latest_date) else 0.0
 
-    in_scope = main_df[(main_df["WEEK NUMBER"] >= START_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)]
-    expected_member_weeks = unique_members * (END_WEEK - START_WEEK + 1)
+    in_scope = main_df[(main_df["WEEK NUMBER"] >= LEGACY_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)]
+    expected_member_weeks = unique_members * (END_WEEK - LEGACY_WEEK + 1)
     submitted_member_weeks = int(in_scope.dropna(subset=["WEEK NUMBER"]).drop_duplicates(subset=["NAME", "WEEK NUMBER"]).shape[0])
     coverage_pct = (submitted_member_weeks / expected_member_weeks * 100) if expected_member_weeks > 0 else 0.0
 
@@ -143,7 +144,7 @@ else:
     selected_month = f2.selectbox("Filter by Month", month_options, index=0)
 
     week_values = sorted(
-        set(main_df["WEEK NUMBER"].dropna().astype(int).tolist()) | set(range(START_WEEK, END_WEEK + 1))
+        set(main_df["WEEK NUMBER"].dropna().astype(int).tolist()) | set(range(LEGACY_WEEK, END_WEEK + 1))
     )
     week_options = ["All"] + [f"Week {w}" for w in week_values]
     selected_week = f3.selectbox("Filter by Week", week_options, index=0)

@@ -15,6 +15,7 @@ GREEN = "#1b8a3a"
 GREEN_LIGHT = "#a5d6a7"
 WEEKLY_CONTRIBUTION = 1000.0
 START_WEEK = 7
+LEGACY_WEEK = 6
 TOTAL_WEEKS = 52
 END_WEEK = TOTAL_WEEKS
 WEEK7_START_DATE = date(2026, 2, 23)  # Monday
@@ -45,11 +46,22 @@ def next_monday(today: date) -> date:
     return today + timedelta(days=days_ahead)
 
 
-def next_due_week(paid_weeks: set[int]) -> int:
-    week = START_WEEK
-    while week in paid_weeks and week <= END_WEEK:
-        week += 1
-    return week
+def required_weeks_through(open_week: int) -> list[int]:
+    capped_open_week = min(open_week, END_WEEK)
+    weeks = [LEGACY_WEEK] if capped_open_week >= LEGACY_WEEK else []
+    if capped_open_week >= START_WEEK:
+        weeks.extend(range(START_WEEK, capped_open_week + 1))
+    return weeks
+
+
+def next_due_week(paid_weeks: set[int], open_week: int) -> tuple[int, list[int]]:
+    required_weeks = required_weeks_through(open_week)
+    unpaid_weeks = [week for week in required_weeks if week not in paid_weeks]
+    if unpaid_weeks:
+        return unpaid_weeks[0], unpaid_weeks
+    if open_week >= END_WEEK:
+        return END_WEEK + 1, []
+    return open_week + 1, []
 
 
 hide_sidebar()
@@ -94,9 +106,9 @@ else:
 
 today = date.today()
 open_week = current_open_week(today)
-due_week = next_due_week(paid_weeks)
+due_week, unpaid_weeks = next_due_week(paid_weeks, open_week)
 can_submit = records_available and due_week <= open_week and due_week <= END_WEEK
-arrears_weeks = max(0, open_week - due_week)
+arrears_weeks = max(len(unpaid_weeks) - 1, 0)
 
 l, c, r = st.columns([1, 2, 1])
 with c:
@@ -125,9 +137,10 @@ with c:
             submitted = False
         elif can_submit:
             st.info(f"Next required week: Week {due_week}")
-            if arrears_weeks > 0:
+            if arrears_weeks > 0 or due_week < START_WEEK:
+                unpaid_end_week = unpaid_weeks[-1]
                 st.warning(
-                    f"You currently owe {arrears_weeks + 1} week(s) from Week {due_week} to Week {open_week}. "
+                    f"You currently owe {len(unpaid_weeks)} week(s) from Week {due_week} to Week {unpaid_end_week}. "
                     "Complete these week-by-week before paying any later week."
                 )
             submitted = st.button(f"Pay Week {due_week}", use_container_width=True)

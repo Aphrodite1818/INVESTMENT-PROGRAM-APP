@@ -21,6 +21,7 @@ GREEN_FAINT = "#e8f5e9"
 RED = "#c62828"
 CURRENCY_PREFIX = "N"
 START_WEEK = 7
+LEGACY_WEEK = 6
 TOTAL_WEEKS = 52
 END_WEEK = TOTAL_WEEKS
 
@@ -81,10 +82,10 @@ main_df = load_data()
 if main_df.empty:
     st.info("No contribution data available yet.")
 else:
-    expected_weeks = list(range(START_WEEK, END_WEEK + 1))
+    expected_weeks = list(range(LEGACY_WEEK, END_WEEK + 1))
     expected_week_set = set(expected_weeks)
 
-    valid_week_df = main_df[(main_df["WEEK NUMBER"] >= START_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)].copy()
+    valid_week_df = main_df[(main_df["WEEK NUMBER"] >= LEGACY_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)].copy()
 
     unique_members = sorted(valid_week_df["NAME"].dropna().unique().tolist())
     if not unique_members:
