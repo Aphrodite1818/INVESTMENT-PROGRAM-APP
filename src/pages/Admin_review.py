@@ -90,11 +90,9 @@ else:
         unique_members = sorted(main_df["NAME"].dropna().unique().tolist())
 
     member_expected = len(expected_weeks)
-    expected_total = len(unique_members) * member_expected if unique_members else 0
-
-    submitted_unique = valid_week_df.drop_duplicates(subset=["NAME", "WEEK NUMBER"]).shape[0]
-    missing_total = max(expected_total - submitted_unique, 0)
-    completion_pct = (submitted_unique / expected_total * 100) if expected_total > 0 else 0.0
+    submitted_weeks = int(valid_week_df["WEEK NUMBER"].dropna().astype(int).nunique())
+    missing_total = max(member_expected - submitted_weeks, 0)
+    completion_pct = (submitted_weeks / member_expected * 100) if member_expected > 0 else 0.0
 
     k1, k2, k3, k4 = st.columns(4)
 
@@ -106,12 +104,12 @@ else:
     with k2:
         with st.container(border=True):
             st.markdown("<h5 style='text-align:center;'>WEEKS EXPECTED</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center; color:{GREEN};'>{expected_total}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align:center; color:{GREEN};'>{member_expected}</h3>", unsafe_allow_html=True)
 
     with k3:
         with st.container(border=True):
             st.markdown("<h5 style='text-align:center;'>WEEKS SUBMITTED</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center; color:{GREEN};'>{submitted_unique}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align:center; color:{GREEN};'>{submitted_weeks}</h3>", unsafe_allow_html=True)
 
     with k4:
         with st.container(border=True):
