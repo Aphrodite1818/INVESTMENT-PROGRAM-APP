@@ -47,6 +47,21 @@ def to_csv_bytes(df: pd.DataFrame) -> bytes:
     return df.to_csv(index=False).encode("utf-8")
 
 
+def next_due_week_for_member(paid_weeks: set[int]) -> int:
+    if LEGACY_WEEK not in paid_weeks:
+        return LEGACY_WEEK
+
+    for week in range(START_WEEK, END_WEEK + 1):
+        if week not in paid_weeks:
+            return week
+
+    return END_WEEK + 1
+
+
+def weeks_left_from_due(due_week: int) -> int:
+    return max(END_WEEK - due_week, 0)
+
+
 def load_data() -> pd.DataFrame:
     raw_df = get_transaction_data()
     df = clean_transaction_data(raw_df)
@@ -82,20 +97,39 @@ main_df = load_data()
 if main_df.empty:
     st.info("No contribution data available yet.")
 else:
-    expected_weeks = list(range(LEGACY_WEEK, END_WEEK + 1))
-    expected_week_set = set(expected_weeks)
+    expected_weeks_left = max(END_WEEK - START_WEEK, 0)
 
     valid_week_df = main_df[(main_df["WEEK NUMBER"] >= LEGACY_WEEK) & (main_df["WEEK NUMBER"] <= END_WEEK)].copy()
+    current_window_df = valid_week_df[(valid_week_df["WEEK NUMBER"] >= START_WEEK) & (valid_week_df["WEEK NUMBER"] <= END_WEEK)]
 
     unique_members = sorted(valid_week_df["NAME"].dropna().unique().tolist())
     if not unique_members:
         unique_members = sorted(main_df["NAME"].dropna().unique().tolist())
 
-    member_expected = len(expected_weeks)
-    submitted_week_set = set(valid_week_df["WEEK NUMBER"].dropna().astype(int).tolist()) & expected_week_set
-    submitted_weeks = len(submitted_week_set)
-    missing_total = len(expected_week_set - submitted_week_set)
-    completion_pct = (submitted_weeks / member_expected * 100) if member_expected > 0 else 0.0
+    submitted_weeks = int(current_window_df["WEEK NUMBER"].dropna().astype(int).nunique())
+    submitted_weeks = min(submitted_weeks, expected_weeks_left)
+    missing_total = max(expected_weeks_left - submitted_weeks, 0)
+    completion_pct = (submitted_weeks / expected_weeks_left * 100) if expected_weeks_left > 0 else 0.0
+
+    member_progress_rows = []
+    member_paid_weeks: dict[str, set[int]] = {}
+    for member in unique_members:
+        paid_weeks = set(
+            valid_week_df[valid_week_df["NAME"] == member]["WEEK NUMBER"].dropna().astype(int).tolist()
+        )
+        member_paid_weeks[member] = paid_weeks
+        due_week = next_due_week_for_member(paid_weeks)
+        weeks_left = weeks_left_from_due(due_week)
+        member_progress_rows.append(
+            {
+                "NAME": member,
+                "SUBMITTED WEEKS": max(expected_weeks_left - weeks_left, 0),
+                "MISSING WEEKS": weeks_left,
+                "DUE WEEK": due_week if due_week <= END_WEEK else None,
+            }
+        )
+
+    member_progress = pd.DataFrame(member_progress_rows)
 
     k1, k2, k3, k4 = st.columns(4)
 
@@ -107,7 +141,7 @@ else:
     with k2:
         with st.container(border=True):
             st.markdown("<h5 style='text-align:center;'>WEEKS EXPECTED</h5>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='text-align:center; color:{GREEN};'>{member_expected}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align:center; color:{GREEN};'>{expected_weeks_left}</h3>", unsafe_allow_html=True)
 
     with k3:
         with st.container(border=True):
@@ -133,13 +167,6 @@ else:
             if valid_week_df.empty:
                 st.info("No valid in-range week data yet (weeks 7-52).")
             else:
-                member_progress = (
-                    valid_week_df.drop_duplicates(subset=["NAME", "WEEK NUMBER"])
-                    .groupby("NAME", as_index=False)["WEEK NUMBER"]
-                    .count()
-                    .rename(columns={"WEEK NUMBER": "SUBMITTED WEEKS"})
-                )
-                member_progress["MISSING WEEKS"] = member_expected - member_progress["SUBMITTED WEEKS"]
                 member_progress = member_progress.sort_values(["MISSING WEEKS", "NAME"], ascending=[False, True])
 
                 fig = px.bar(
@@ -184,10 +211,14 @@ else:
 
     if unique_members:
         selected_member = st.selectbox("Inspect Member", unique_members, index=0)
-        member_weeks = set(
-            valid_week_df[valid_week_df["NAME"] == selected_member]["WEEK NUMBER"].dropna().astype(int).tolist()
-        )
-        missing_weeks = [w for w in expected_weeks if w not in member_weeks]
+        selected_paid_weeks = member_paid_weeks.get(selected_member, set())
+        selected_due_week = next_due_week_for_member(selected_paid_weeks)
+        selected_missing_weeks_left = weeks_left_from_due(selected_due_week)
+        selected_submitted_weeks = max(expected_weeks_left - selected_missing_weeks_left, 0)
+        if selected_due_week <= END_WEEK:
+            missing_weeks = [w for w in range(selected_due_week, END_WEEK)]
+        else:
+            missing_weeks = []
 
         d1, d2 = st.columns(2)
         with d1:
@@ -195,8 +226,8 @@ else:
                 st.markdown(f"<h4 style='color:{GREEN};'>Member Detail: {selected_member}</h4>", unsafe_allow_html=True)
                 total_paid = float(main_df[main_df["NAME"] == selected_member]["AMOUNT PAID"].sum())
                 st.markdown(f"<div>Total Paid: <b>{CURRENCY_PREFIX}{total_paid:,.2f}</b></div>", unsafe_allow_html=True)
-                st.markdown(f"<div>Weeks Submitted: <b>{len(member_weeks)}</b> / {member_expected}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div>Weeks Missing: <b>{len(missing_weeks)}</b></div>", unsafe_allow_html=True)
+                st.markdown(f"<div>Weeks Submitted: <b>{selected_submitted_weeks}</b> / {expected_weeks_left}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div>Weeks Missing: <b>{selected_missing_weeks_left}</b></div>", unsafe_allow_html=True)
 
         with d2:
             with st.container(border=True):
